@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+.DS_Store
+*.xcscheme
+*.xcworkspacedata
+CommonCrypto.xcodeproj/xcuserdata/sense.xcuserdatad/xcschemes/xcschememanagement.plist
+*.xcuserstate
+CommonCrypto.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
