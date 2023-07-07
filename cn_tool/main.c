@@ -327,10 +327,10 @@ static bool parseArgs(int argc, const char * argv[], cnContextPtr context)
     if (strcasecmp(CN_NAME, cmd) == 0) {
         cmd = NULL;
     }
-    require_quiet(cmd || argc > 1, done);
+    __Require_Quiet(cmd || argc > 1, done);
     
     context->cmd = getcmd(cmd ? cmd : argv[1]);
-    require_quiet(context->cmd != NULL, done);
+    __Require_Quiet(context->cmd != NULL, done);
     
     if (!cmd) {
         argc -= 1;
@@ -419,30 +419,30 @@ static CNStatus crcOp(cnContextPtr context)
     
     if(context->dumpTable) {
         status = CNCRCDumpTable(context->alg);
-        require_noerr(status, done);
+        __Require_noErr(status, done);
         return status;
     } else  if (context->string) {
         size_t sLen = strlen(context->string);
         status = CNCRC(context->alg, context->string, sLen, &crc);
-        require_noerr(status, done);
+        __Require_noErr(status, done);
         
         context->totalBytes = sLen;
     } else {
         status = CNCRCInit(context->alg, &crcRef);
-        require_noerr(status, done);
+        __Require_noErr(status, done);
         
         char buf[context->pageSize];
         size_t nr;
         
         while ((nr = read(context->fd, buf, sizeof(buf))) > 0) {
             status = CNCRCUpdate(crcRef, buf, nr);
-            require_noerr(status, done);
+            __Require_noErr(status, done);
             
             context->totalBytes += nr;
         }
         
         status = CNCRCFinal(crcRef, &crc);
-        require_noerr(status, done);
+        __Require_noErr(status, done);
     }
     
     pcrc(context, crc);
@@ -520,10 +520,10 @@ static CNStatus basexxOp(cnContextPtr context)
         encodedSize = CNEncoderGetOutputLengthFromEncoding(context->alg, direction, sLen);
         
         encodeBuf = calloc(1u, encodedSize);
-        require(encodeBuf != NULL, done);
+        __Require(encodeBuf != NULL, done);
         
         CNEncode(context->alg, direction, context->string, sLen, encodeBuf, &encodedSize);
-        require_noerr_action(status, done, status = kCNDecodeError);
+        __Require_noErr_Action(status, done, status = kCNDecodeError);
         
         pbase(context, direction, encodeBuf, encodedSize);
         
@@ -535,7 +535,7 @@ static CNStatus basexxOp(cnContextPtr context)
         size_t encodeLen = 0;
 
         status = CNEncoderCreate(context->alg, direction, &encoder);
-        require_noerr_action(status, done, status = kCNDecodeError);
+        __Require_noErr_Action(status, done, status = kCNDecodeError);
         
         size_t readBufSize = context->pageSize, expectedSize = 0;
         if (direction == kCNEncode) {
@@ -545,7 +545,7 @@ static CNStatus basexxOp(cnContextPtr context)
         
         encodeLen = CNEncoderGetOutputLength(encoder, readBufSize);
         encodeBuf = calloc(1u, encodeLen);
-        require(encodeBuf != NULL, done);
+        __Require(encodeBuf != NULL, done);
         
         while ((bytesRead = read(context->fd, readBuf, readBufSize)) > 0) {
             encodedSize = encodeLen;
@@ -561,7 +561,7 @@ static CNStatus basexxOp(cnContextPtr context)
             } else {
                 status = CNEncoderUpdate(encoder, readBuf, bytesRead, encodeBuf, &encodedSize);
             }
-            require_noerr_action(status, done, status = kCNDecodeError);
+            __Require_noErr_Action(status, done, status = kCNDecodeError);
             
             // during encode only print if we got the full expected encode size (we might need to add padding)
             // during decode print all decoded bytes
@@ -576,7 +576,7 @@ static CNStatus basexxOp(cnContextPtr context)
         encodedSize = encodeLen - pos;
         
         status = CNEncoderFinal(encoder, &encodeBuf[pos], &encodedSize);
-        require_noerr_action(status, done, status = kCNDecodeError);
+        __Require_noErr_Action(status, done, status = kCNDecodeError);
         
         // If we had to add padding or didn't print the full buffer from above do so now
         if (direction == kCNEncode && (encodedSize || pos < expectedSize)) {
@@ -627,7 +627,7 @@ int main(int argc, const char * argv[])
     
     context->fd = STDIN_FILENO;
     
-    require_action_quiet(parseArgs(argc, argv, context) == true, done, rc = kCNParamError);
+    __Require_Action_Quiet(parseArgs(argc, argv, context) == true, done, rc = kCNParamError);
 
     switch (context->cmd->op) {
         case cmdOpCRC:
@@ -641,7 +641,7 @@ int main(int argc, const char * argv[])
             break;
     }
     
-    require_action(op != NULL, done, rc = kCNParamError);
+    __Require_Action(op != NULL, done, rc = kCNParamError);
 
     const char ** pos = context->files;
     do {
